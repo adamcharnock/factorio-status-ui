@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, Any
 
 
 class State(object):
@@ -35,12 +35,34 @@ class Mod(State):
         )
 
 
+class Config(State):
+    afk_auto_kick: bool
+    allow_commands: str
+    autosave_interval: str
+    autosave_only_on_server: Any
+    ignore_player_limit_for_returning_players: Any
+    max_players: Any
+    max_upload_speed: Any
+    only_admins_can_pause: Any
+    password: Any
+    require_user_verification: Any
+    visibility_lan: Any
+    visibility_public: Any
+
+    def __repr__(self):
+        return '<Config: {}>'.format(self.__dict__)
+
+    def as_dict(self):
+        return self.__dict__
+
+
 class Server(State):
     name: str
     description: str
     players: Tuple[Player] = tuple()
     admins: Tuple[Player] = tuple()
     mods: Tuple[Mod] = tuple()
+    config: Config
 
 
 server = Server()

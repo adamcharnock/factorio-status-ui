@@ -8,6 +8,7 @@ import sys
 from factorio_status_ui.config import RCON_SERVER_HOSTNAME, RCON_SERVER_PORT, RCON_PASSWORD
 
 
+
 MESSAGE_TYPE_AUTH = 3
 MESSAGE_TYPE_AUTH_RESP = 2
 MESSAGE_TYPE_COMMAND = 2
@@ -40,9 +41,9 @@ async def get_response(reader):
         response_size, = struct.unpack('=l', await reader.read(4))
         message_format = ''.join(['=ll', str(response_size - 9), 's1s'])
 
+        response_data = await reader.read(response_size)
         response_id, response_type, response_string, response_dummy \
-            = struct.unpack(message_format, await reader.read(response_size))
-
+            = struct.unpack(message_format, response_data)
         response_string = response_string.rstrip(b'\x00\n')
         return response_string, response_id, response_type
 
@@ -57,6 +58,7 @@ class RconConnection():
         self.reader, self.writer = await asyncio.open_connection(RCON_SERVER_HOSTNAME, RCON_SERVER_PORT)
         await send_message(self.writer, RCON_PASSWORD, MESSAGE_TYPE_AUTH)
         response_string, response_id, response_type = await get_response(self.reader)
+
         return self
 
     async def __aexit__(self, exc_type, exc, tb):
@@ -65,6 +67,11 @@ class RconConnection():
     async def run_command(self, command: str):
         await send_message(self.writer, command, MESSAGE_TYPE_COMMAND)
         response_string, response_id, response_type = await get_response(self.reader)
+
+        # See: https://developer.valvesoftware.com/wiki/Source_RCON_Protocol#Multiple-packet_Responses
+        # Basically we get an empty packet after each response
+        await get_response(self.reader)
+
         return response_string
 
 

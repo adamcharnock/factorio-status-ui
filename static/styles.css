@@ -1,3 +1,13 @@
-.foo {
-
+.main-header {
+    min-height: 200px;
+}
+.main-header .navbar {
+    background: #666 url('/static/banner.jpg') no-repeat no-repeat center !important;
+    min-height: 200px;
+}
+.main-header .navbar .container {
+    margin-top: 120px;
+}
+.navbar-brand {
+    font-size: 36px;
 }

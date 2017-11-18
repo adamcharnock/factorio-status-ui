@@ -3,7 +3,7 @@ import re
 from pathlib import Path
 from typing import Tuple, List
 
-from factorio_status_ui.state import Player, server, Mod
+from factorio_status_ui.state import Player, server, Mod, Config
 
 
 def handle_players(player_data: str):
@@ -27,7 +27,7 @@ def handle_admins(admin_data: str):
 
     admins = []
     for admin_line in admin_data.split('\n'):
-        username = admin_line.strip()
+        username, *extra = admin_line.strip().split(' ', 1)
 
         admin = None
         for player in server.players:
@@ -75,3 +75,25 @@ def handle_mods(mods_and_files: Tuple[str, List[Path]]):
     print('Mods:', repr(mods))
     server.mods = tuple(mods)
 
+
+def handle_config(config: dict):
+    def munge_value(v: str):
+        v = v.strip('.')
+        if ':' in v:
+            v = v.split(':', 1)[-1].strip()
+
+        if v.lower() == 'false':
+            return False
+        if v.lower() == 'true':
+            return True
+        if 'disabled' in v:
+            return False
+        if 'enabled' in v:
+            return True
+        if 'every' in v:  # Autosave every 10 minutes
+            return v.split('every', 1)[-1].strip()
+        return v
+
+    kwargs = {k.replace('-', '_'): munge_value(v.decode('utf8')) for k, v in config.items()}
+    server.config = Config(**kwargs)
+    print(server.config)

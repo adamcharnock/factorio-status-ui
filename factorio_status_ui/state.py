@@ -1,14 +1,29 @@
+from typing import Tuple
 
-class User(object):
+
+class State(object):
+
+    def __init__(self, **kwargs):
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+
+
+class Player(State):
     username: str
-    is_admin: bool = False
-    is_online: bool = True
+    is_online: bool = False
+
+    def __repr__(self):
+        return '<Player: {}, is_online={}>'.format(
+            self.username,
+            self.is_online,
+        )
 
 
-class Server(object):
+class Server(State):
     name: str
     description: str
-    users: list[User]
+    players: Tuple[Player] = tuple()
+    admins: Tuple[Player] = tuple()
 
 
 server = Server()

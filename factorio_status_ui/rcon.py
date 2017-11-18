@@ -8,7 +8,7 @@ import sys
 # START USER EDITABLE SECTION
 RCON_SERVER_HOSTNAME = '127.0.0.1'
 RCON_SERVER_PORT = 27015
-RCON_PASSWORD = 'a11607199f4f51a6'
+RCON_PASSWORD = 'f23ecf5f7ead5b07'
 RCON_SERVER_TIMEOUT = 1  # server response timeout in seconds, don't go too high
 # END USER EDITABLE SECTION
 
@@ -48,9 +48,7 @@ async def get_response(reader):
         response_id, response_type, response_string, response_dummy \
             = struct.unpack(message_format, await reader.read(response_size))
 
-        if (response_string is None or response_string is str(b'\x00')) and response_id is not 2:
-            response_string = "(Empty Response)"
-
+        response_string = response_string.rstrip(b'\x00\n')
         return response_string, response_id, response_type
 
     except socket.timeout:
@@ -58,7 +56,23 @@ async def get_response(reader):
         return response_string, response_id, response_type
 
 
-# begin main loop
+class RconConnection():
+
+    async def __aenter__(self):
+        self.reader, self.writer = await asyncio.open_connection(RCON_SERVER_HOSTNAME, RCON_SERVER_PORT)
+        await send_message(self.writer, RCON_PASSWORD, MESSAGE_TYPE_AUTH)
+        response_string, response_id, response_type = await get_response(self.reader)
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb):
+        self.writer.close()
+
+    async def run_command(self, command: str):
+        await send_message(self.writer, command, MESSAGE_TYPE_COMMAND)
+        response_string, response_id, response_type = await get_response(self.reader)
+        return response_string
+
+
 async def main():
     if len(sys.argv) > 1:
         command_string = " ".join(sys.argv[1:])

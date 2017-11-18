@@ -5,6 +5,8 @@ import jinja2
 from aiohttp import web
 from pathlib import Path
 
+from factorio_status_ui import handlers
+from factorio_status_ui.rcon import RconConnection
 from factorio_status_ui.state import server
 
 ROOT_DIR = Path(__file__).parent.parent
@@ -30,22 +32,36 @@ def setup_templates(app):
     aiohttp_jinja2.setup(app, loader=jinja2.FileSystemLoader(str(ROOT_DIR / 'templates')))
 
 
-async def test_co(app):
-    while True:
-        try:
-            await asyncio.sleep(1)
-        except asyncio.CancelledError:
-            return
-        print("test_co")
+async def monitor_players():
+    async with RconConnection() as rcon:
+        while True:
+            try:
+                handlers.handle_players(await rcon.run_command('/players'))
+                await asyncio.sleep(1)
+            except asyncio.CancelledError:
+                return
+
+
+async def monitor_admins():
+    async with RconConnection() as rcon:
+        while True:
+            try:
+                handlers.handle_admins(await rcon.run_command('/admins'))
+                await asyncio.sleep(1)
+            except asyncio.CancelledError:
+                return
 
 
 async def start_background_tasks(app):
-    app['test_co'] = app.loop.create_task(test_co(app))
+    app['monitor_players'] = app.loop.create_task(monitor_players())
+    app['monitor_admins'] = app.loop.create_task(monitor_admins())
 
 
 async def cleanup_background_tasks(app):
-    app['test_co'].cancel()
-    await app['test_co']
+    app['monitor_players'].cancel()
+    app['monitor_admins'].cancel()
+    await app['monitor_players']
+    await app['monitor_admins']
 
 
 if __name__ == '__main__':

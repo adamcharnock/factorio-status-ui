@@ -3,7 +3,7 @@ import re
 from pathlib import Path
 from typing import Tuple, List
 
-from factorio_status_ui.state import Player, server, Mod, Config
+from factorio_status_ui.state import Player, server, mod_database, Mod, Config
 
 
 def handle_players(player_data: str):
@@ -76,6 +76,16 @@ def handle_mods(mods_and_files: Tuple[str, List[Path]]):
     server.mods = tuple(mods)
 
 
+def handle_mod_database(data):
+    tmp_database = {}
+    for mod in data['results']:
+        if 'name' in mod:
+            tmp_database[mod['name']] = mod
+    if tmp_database:
+        mod_database.update(tmp_database)
+    print('Mods loaded:', len(mod_database))
+
+
 def handle_config(config: dict):
     def munge_value(v: str):
         v = v.strip('.')
@@ -92,8 +102,16 @@ def handle_config(config: dict):
             return True
         if 'every' in v:  # Autosave every 10 minutes
             return v.split('every', 1)[-1].strip()
+        if v.strip() == "The server currently doesn't have a password":
+            return None
         return v
 
     kwargs = {k.replace('-', '_'): munge_value(v.decode('utf8')) for k, v in config.items()}
     server.config = Config(**kwargs)
     print(server.config)
+
+
+def handle_ip(ip):
+    if not server.ip:
+        server.ip = ip
+        print(server.ip)

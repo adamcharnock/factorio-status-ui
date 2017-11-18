@@ -1,6 +1,8 @@
 from pathlib import Path
 from typing import Tuple, Any
 
+import factorio_status_ui.config
+
 
 class State(object):
 
@@ -57,12 +59,15 @@ class Config(State):
 
 
 class Server(State):
-    name: str
+    name: str = factorio_status_ui.config.SERVER_NAME
     description: str
     players: Tuple[Player] = tuple()
     admins: Tuple[Player] = tuple()
     mods: Tuple[Mod] = tuple()
     config: Config
+    ip: factorio_status_ui.config.SERVER_IP = None
+    port: factorio_status_ui.config.SERVER_PORT = 34197
 
 
 server = Server()
+mod_database = {}

@@ -3,12 +3,14 @@ import os
 
 import aiohttp_jinja2
 import jinja2
+import aiohttp
 from aiohttp import web
 from pathlib import Path
+import async_timeout
 
 from factorio_status_ui import handlers, config
 from factorio_status_ui.rcon import RconConnection
-from factorio_status_ui.state import server
+from factorio_status_ui.state import server, mod_database
 
 ROOT_DIR = Path(__file__).parent.parent
 
@@ -19,7 +21,13 @@ class IndexView(web.View):
             'index.jinja2',
             self.request,
             {
-                'server': server
+                'server': server,
+                'config': config,
+                'get_mod_data': lambda name: (
+                    mod_database.get(name, None) or
+                    mod_database.get(name.replace(' ', '_'), None) or
+                    mod_database.get(name.replace('_', ' '), None) or
+                    {})
             }
         )
 
@@ -41,7 +49,7 @@ def setup_routes(app):
 
 
 def setup_templates(app):
-    aiohttp_jinja2.setup(app, loader=jinja2.FileSystemLoader(str(ROOT_DIR / 'templates')))
+    aiohttp_jinja2.setup(app, loader=jinja2.FileSystemLoader(str(ROOT_DIR / 'templates')), autoescape=True)
 
 
 async def poll_coroutine(coroutine, handler, interval=1):
@@ -93,16 +101,32 @@ async def poll_config(handler, interval=10):
                 return
 
 
-async def get_mods():
+async def get_local_mods():
     with open(config.MODS_DIR / 'mod-list.json') as f:
         return f.read(), list(config.MODS_DIR.glob('*.zip'))
+
+
+async def get_mod_database():
+    with async_timeout.timeout(60):
+        async with aiohttp.ClientSession() as session:
+            async with session.get('https://mods.factorio.com/api/mods?page_size=100000') as response:
+                return await response.json()
+
+
+async def determine_ip(handler):
+    with async_timeout.timeout(10):
+        async with aiohttp.ClientSession() as session:
+            async with session.get('https://api.ipify.org?format=json') as response:
+                handler((await response.json())['ip'])
 
 
 async def start_background_tasks(app):
     app['monitor_players'] = app.loop.create_task(poll_rcon('/players', handlers.handle_players))
     app['monitor_admins'] = app.loop.create_task(poll_rcon('/admins', handlers.handle_admins))
-    app['monitor_mods'] = app.loop.create_task(poll_coroutine(get_mods, handlers.handle_mods))
+    app['monitor_mods'] = app.loop.create_task(poll_coroutine(get_local_mods, handlers.handle_mods))
     app['monitor_config'] = app.loop.create_task(poll_config(handlers.handle_config))
+    app['determine_ip'] = app.loop.create_task(determine_ip(handlers.handle_ip))
+    app['monitor_mod_database'] = app.loop.create_task(poll_coroutine(get_mod_database, handlers.handle_mod_database, interval=3600 * 24))
 
 
 async def cleanup_background_tasks(app):
@@ -110,10 +134,15 @@ async def cleanup_background_tasks(app):
     app['monitor_admins'].cancel()
     app['monitor_mods'].cancel()
     app['monitor_config'].cancel()
+    app['determine_ip'].cancel()
+    app['monitor_mod_database'].cancel()
+
     await app['monitor_players']
     await app['monitor_admins']
     # await app['monitor_mods']
     await app['monitor_config']
+    await app['determine_ip']
+    await app['monitor_mod_database']
 
 
 if __name__ == '__main__':

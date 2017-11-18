@@ -1,0 +1,7 @@
+{
+  "name": "factorio-status-ui",
+  "version": "1.0.0",
+  "dependencies": {
+    "admin-lte": "^2.4.2"
+  }
+}

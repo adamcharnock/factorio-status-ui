@@ -70,7 +70,9 @@ class RconConnection():
 
         # See: https://developer.valvesoftware.com/wiki/Source_RCON_Protocol#Multiple-packet_Responses
         # Basically we get an empty packet after each response
-        await get_response(self.reader)
+        if command.startswith('/config'):
+            # Config commands seem to be multi-packet responses
+            await get_response(self.reader)
 
         return response_string
 

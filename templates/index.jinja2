@@ -37,7 +37,7 @@
         <nav class="navbar navbar-static-top">
             <div class="container">
                 <div class="navbar-header">
-                    <a href="/" class="navbar-brand">Server Name Here</a>
+                    <a href="/" class="navbar-brand">{{ server.name }}</a>
                     <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse">
                         <i class="fa fa-bars"></i>
                     </button>
@@ -54,32 +54,26 @@
             <section class="content">
                 <div class="row">
                     <div class="col-md-6">
-                        <div class="box box-warning">
+                        <div class="box box-success">
                             <div class="box-header with-border">
-                                <h3 class="box-title">Players</h3>
+                                <h3 class="box-title">Connect to this server</h3>
                             </div>
                             <div class="box-body">
+                                {% if server.config and not server.config.visibility_public %}
+                                    <div class="alert alert-warning">
+                                        <h4><i class="icon fa fa-warning"></i> Local network only</h4>
+                                        This server is only available on the local network.
+                                        Make sure you are on the same network as this server
+                                        before trying to connect.
+                                    </div>
+                                {% endif %}
 
                                 <table class="table table-striped">
-                                    <thead>
-                                        <tr>
-                                            <th>Name</th>
-                                            <th>Online</th>
-                                            <th>Admin</th>
-                                        </tr>
-                                    </thead>
                                     <tbody>
-                                        {% for player in server.players %}
-                                        <tr>
-                                            <td>{{ player.username }}</td>
-                                            <td>{{ player.is_online }}</td>
-                                            <td>{{ player.is_admin }}TBA</td>
-                                        </tr>
-                                        {% else %}
-                                            <tr>
-                                                <td colspan="3">No players</td>
-                                            </tr>
-                                        {% endfor %}
+                                    <tr>
+                                        <th>Host</th>
+                                        <td>{{ server.ip }}:{{ server.port }}</td>
+                                    </tr>
                                     </tbody>
                                 </table>
 
@@ -88,24 +82,76 @@
 
                         <div class="box box-warning">
                             <div class="box-header with-border">
-                                <h3 class="box-title">Config</h3>
+                                <h3 class="box-title">Players</h3>
                             </div>
                             <div class="box-body">
 
                                 <table class="table table-striped">
                                     <thead>
-                                        <tr>
-                                            <th>Option</th>
-                                            <th>Value</th>
-                                        </tr>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Online</th>
+                                        <th>Admin</th>
+                                    </tr>
                                     </thead>
                                     <tbody>
-                                        {% for k, v in server.config.as_dict().items() %}
+                                    {% for player in server.players %}
+                                        <tr>
+                                            <td>{{ player.username }}</td>
+                                            <td>
+                                                {% if player.is_online %}
+                                                    <i class="fa fa-check" aria-hidden="true"></i>
+                                                {% else %}
+                                                    <i class="fa fa-times" aria-hidden="true"></i>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ player.is_admin }}TBA</td>
+                                        </tr>
+                                    {% else %}
+                                        <tr>
+                                            <td colspan="3">No players</td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+
+                            </div>
+                        </div>
+
+                        <div class="box box-warning collapsed-box">
+                            <div class="box-header with-border">
+                                <h3 class="box-title">Configuration</h3>
+                                <div class="box-tools pull-right">
+                                    <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="box-body">
+
+                                <table class="table table-striped">
+                                    <thead>
+                                    <tr>
+                                        <th>Option</th>
+                                        <th>Value</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for k, v in server.config.as_dict().items() %}
                                         <tr>
                                             <td>{{ k }}</td>
-                                            <td>{{ v }}</td>
+                                            <td>
+                                                {% if k == "password" and not config.SHOW_PASSWORD %}
+                                                    <em>[hidden]</em>
+                                                {% elif v == true %}
+                                                    <i class="fa fa-check" aria-hidden="true"></i>
+                                                {% elif v == false %}
+                                                    <i class="fa fa-times" aria-hidden="true"></i>
+                                                {% else %}
+                                                    {{ v }}
+                                                {% endif %}
+                                            </td>
                                         </tr>
-                                        {% endfor %}
+                                    {% endfor %}
                                     </tbody>
                                 </table>
 
@@ -122,20 +168,43 @@
 
                                 <table class="table table-striped">
                                     <thead>
-                                        <tr>
-                                            <th>Name</th>
-                                            <th>Version</th>
-                                            <th></th>
-                                        </tr>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Version</th>
+                                        <th>Downloads</th>
+                                        <th></th>
+                                    </tr>
                                     </thead>
                                     <tbody>
-                                        {% for mod in server.mods %}
+                                    {% for mod in server.mods %}
+                                        {% set mod_data = get_mod_data(mod.name) %}
                                         <tr>
-                                            <td>{{ mod.name }}</td>
+                                            {% if mod_data %}
+                                                <td>
+                                                    <a
+                                                            href="https://mods.factorio.com/mods/{{ mod_data.owner }}/{{ mod_data.name }}"
+                                                            target="_blank"
+                                                            data-toggle="tooltip"
+                                                            data-placement="left"
+                                                            title="{{ mod_data.summary }}"
+                                                    >
+                                                        {{ mod.name }}
+                                                    </a>
+                                                </td>
+                                            {% else %}
+                                                <td>{{ mod.name }}</td>
+                                            {% endif %}
                                             <td>{{ mod.version }}</td>
-                                            <td>DL</td>
+                                            <td>
+                                                {% if mod_data.downloads_count %}
+                                                    {{ "{:,.0f}".format(mod_data.downloads_count) }}
+                                                {% endif %}
+                                                </td>
+                                            <td>
+                                                <a href="/mods/download/{{ mod.file.name }}" class="btn btn-default btn-xs"><i class="fa fa-download"></i></a>
+                                            </td>
                                         </tr>
-                                        {% endfor %}
+                                    {% endfor %}
                                     </tbody>
                                 </table>
 
@@ -168,5 +237,10 @@
 <script src="/lib/admin-lte/node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
 <!-- AdminLTE App -->
 <script src="/lib/admin-lte/dist/js/adminlte.min.js"></script>
+<script>
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip()
+    })
+</script>
 </body>
 </html>

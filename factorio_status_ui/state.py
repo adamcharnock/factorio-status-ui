@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Tuple
 
 
@@ -19,11 +20,27 @@ class Player(State):
         )
 
 
+class Mod(State):
+    file: Path
+    enabled: bool
+    name: str
+    version: str
+
+    def __repr__(self):
+        return '<Mod: {}, enabled={}, file={}, version={}>'.format(
+            self.name,
+            self.enabled,
+            self.file.name if self.file else None,
+            self.version,
+        )
+
+
 class Server(State):
     name: str
     description: str
     players: Tuple[Player] = tuple()
     admins: Tuple[Player] = tuple()
+    mods: Tuple[Mod] = tuple()
 
 
 server = Server()

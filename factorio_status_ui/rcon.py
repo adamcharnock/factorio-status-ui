@@ -5,12 +5,7 @@ import socket
 import struct
 import sys
 
-# START USER EDITABLE SECTION
-RCON_SERVER_HOSTNAME = '127.0.0.1'
-RCON_SERVER_PORT = 27015
-RCON_PASSWORD = 'f23ecf5f7ead5b07'
-RCON_SERVER_TIMEOUT = 1  # server response timeout in seconds, don't go too high
-# END USER EDITABLE SECTION
+from factorio_status_ui.config import RCON_SERVER_HOSTNAME, RCON_SERVER_PORT, RCON_PASSWORD
 
 
 MESSAGE_TYPE_AUTH = 3

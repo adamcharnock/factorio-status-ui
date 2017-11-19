@@ -9,6 +9,10 @@ service:
   externalPort: 80
   internalPort: 80
 
+persistance:
+  modsPersistantVolumeClaimName:
+  savesPersistantVolumeClaimName:
+
 factorio:
   host:
   port: 34197
@@ -24,8 +28,7 @@ ingress:
      kubernetes.io/ingress.class: nginx
      kubernetes.io/tls-acme: "true"
   tls:
-    # Secrets must be manually created in the namespace.
-    - secretName: chart-example-tls
+    - secretName: factorio-tls
       hosts:
         - chart-example.local
 

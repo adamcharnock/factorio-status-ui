@@ -62,10 +62,13 @@ class Server(State):
     admins: Tuple[Player] = tuple()
     mods: Tuple[Mod] = tuple()
     all_mods_file: Path
-    config: ServerConfig = {}
+    config: ServerConfig = ServerConfig()
 
 
 class ApplicationConfig(State):
+    host: str = None
+    port: int = None
+
     rcon_host: str = None
     rcon_port: int = None
     rcon_password: str = None

@@ -48,7 +48,7 @@ class ModDownloadAllView(web.View):
     async def get(self):
         if server.all_mods_file:
             return web.FileResponse(server.all_mods_file, headers={
-                'Content-Disposition': 'attachment; filename="{}"'.format(server.all_mods_file.na)
+                'Content-Disposition': 'attachment; filename="{}"'.format(server.all_mods_file.name)
             })
         else:
             return web.HTTPServiceUnavailable(reason='File still being generated')

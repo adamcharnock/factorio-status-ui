@@ -15,6 +15,13 @@ spec:
         app: {{ template "factorio-status-ui.name" . }}
         release: {{ .Release.Name }}
     spec:
+      volumes:
+      - name: mods
+        persistentVolumeClaim:
+          claimName: {{ required "A value for persistance.modsPersistantVolumeClaimName is required" .Values.persistance.modsPersistantVolumeClaimName }}
+      - name: saves
+        persistentVolumeClaim:
+          claimName: {{ required "A value for persistance.savesPersistantVolumeClaimName is required" .Values.persistance.savesPersistantVolumeClaimName }}
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -25,9 +32,13 @@ spec:
             - --rcon-password={{ required "Valid value for factorio.rconPassword required" .Values.factorio.rconPassword }}
             - --mods-directory=/mods
             - --saves-directory=/saves
-            - --server-host={{ required "Valid value for factorio.host required" .Values.factorio.host }}
+            {{- if .Values.factorio.host }}
+            - --server-host={{ required .Values.factorio.host }}
+            {{- end }}
             - --server-port={{ required "Valid value for factorio.port required" .Values.factorio.port }}
             - --server-name={{ required "Valid value for factorio.serverName required" .Values.factorio.serverName }}
+            - --port={{ .Values.service.internalPort }}
+            - --host=0.0.0.0
           ports:
             - containerPort: {{ .Values.service.internalPort }}
               protocol: TCP
@@ -37,6 +48,11 @@ spec:
           readinessProbe:
             httpGet:
               port: {{ .Values.service.internalPort }}
+          volumeMounts:
+            - name: mods
+              mountPath: /mods
+            - name: saves
+              mountPath: /saves
           resources:
 {{ toYaml .Values.resources | indent 12 }}
     {{- if .Values.nodeSelector }}

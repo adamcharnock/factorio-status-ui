@@ -30,6 +30,9 @@ def main():
 
     required = parser.add_argument_group('required arguments')
 
+    parser.add_argument('--port', help='The port on which to serve the status page.', type=int, default=8080)
+    parser.add_argument('--host', help='The IP on which to serve the status page.', default='0.0.0.0')
+
     parser.add_argument('--server-name', help='Server name. For display purposes only.', default='Factorio Server')
     parser.add_argument('--server-host', help='Factorio server IP address. For display purposes only. '
                                               'Will attempt to autodetect.')
@@ -57,7 +60,7 @@ def main():
     setup_templates(app)
     app.on_startup.append(start_background_tasks)
     app.on_cleanup.append(cleanup_background_tasks)
-    web.run_app(app, host='127.0.0.1', port=8080)
+    web.run_app(app, host=application_config.host, port=application_config.port)
 
 
 if __name__ == '__main__':

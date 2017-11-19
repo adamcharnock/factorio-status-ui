@@ -11,6 +11,8 @@ from factorio_status_ui.web import setup_routes, setup_templates, start_backgrou
 
 
 def main():
+    print(sys.argv)
+
     # Logging
     logger = logging.getLogger('factorio_status_ui')
     logger.setLevel(logging.DEBUG)
@@ -34,7 +36,7 @@ def main():
     parser.add_argument('--server-port', help='Factorio server port. For display purposes only.', default=34197)
 
     required.add_argument('--rcon-host', help='RCON host address.', required=True)
-    required.add_argument('--rcon-port', help='RCON IP address.', type=int, required=True)
+    required.add_argument('--rcon-port', help='RCON port.', type=int, required=True, default=27015)
     required.add_argument('--rcon-password', help='RCON password.', required=True)
     parser.add_argument('--rcon-timeout', help='RCON timeout in seconds.', default=1, type=int)
 

@@ -24,4 +24,5 @@ ADD templates /code/templates
 VOLUME /mods
 VOLUME /saves
 
-ENTRYPOINT "factorio_status_ui"
+ENTRYPOINT ["factorio_status_ui"]
+CMD []

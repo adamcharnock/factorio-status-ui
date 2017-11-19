@@ -1,0 +1,45 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{ template "factorio-status-ui.fullname" . }}
+  labels:
+    app: {{ template "factorio-status-ui.name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: {{ template "factorio-status-ui.name" . }}
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - --rcon-host={{ required "Valid value for factorio.rconHost required" .Values.factorio.rconHost }}
+            - --rcon-port={{ required "Valid value for factorio.rconPort required" .Values.factorio.rconPort }}
+            - --rcon-password={{ required "Valid value for factorio.rconPassword required" .Values.factorio.rconPassword }}
+            - --mods-directory=/mods
+            - --saves-directory=/saves
+            - --server-host={{ required "Valid value for factorio.host required" .Values.factorio.host }}
+            - --server-port={{ required "Valid value for factorio.port required" .Values.factorio.port }}
+            - --server-name={{ required "Valid value for factorio.serverName required" .Values.factorio.serverName }}
+          ports:
+            - containerPort: {{ .Values.service.internalPort }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              port: {{ .Values.service.internalPort }}
+          readinessProbe:
+            httpGet:
+              port: {{ .Values.service.internalPort }}
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+    {{- if .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 8 }}
+    {{- end }}

@@ -10,7 +10,7 @@ setup(
     author_email='adam@adamcharnock.com',
     packages=find_packages(),
     scripts=[],
-    url='',
+    url='https://github.com/adamcharnock/factorio-status-ui',
     license='MIT',
     description='Simple web UI for Factorio headless servers',
     long_description=open('README.rst').read() if exists("README.rst") else "",

@@ -1,0 +1,12 @@
+apiVersion: v1
+name: factorio-status-ui
+version: 0.1.0
+description: Status web interface for your factorio dedicated server. View users & download mods.
+keywords:
+  - factorio
+  - gaming
+home: https://github.com/adamcharnock/factorio-status-ui
+maintainers:
+  - name: Adam Charnock
+    email: adam@adamcharnock.com
+    url: https://adamcharnock.com

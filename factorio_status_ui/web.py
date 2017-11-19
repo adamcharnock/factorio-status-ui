@@ -1,13 +1,12 @@
 import asyncio
-import os
-
-import aiohttp_jinja2
-import jinja2
-import aiohttp
 import logging
-from aiohttp import web
 from pathlib import Path
+
+import aiohttp
+import aiohttp_jinja2
 import async_timeout
+import jinja2
+from aiohttp import web
 
 from factorio_status_ui import handlers, config
 from factorio_status_ui.rcon import RconConnection
@@ -49,7 +48,7 @@ class ModDownloadAllView(web.View):
     async def get(self):
         if server.all_mods_file:
             return web.FileResponse(server.all_mods_file, headers={
-                'Content-Disposition': 'attachment; filename="{}"'.format(server.all_mods_file.name)
+                'Content-Disposition': 'attachment; filename="{}"'.format(server.all_mods_file.na)
             })
         else:
             return web.HTTPServiceUnavailable(reason='File still being generated')
@@ -164,20 +163,3 @@ async def start_background_tasks(app):
 async def cleanup_background_tasks(app):
     app['tasks'].cancel()
     await app['tasks']
-
-
-if __name__ == '__main__':
-    logger = logging.getLogger('factorio_status_ui')
-    logger.setLevel(logging.DEBUG)
-
-    handler = logging.StreamHandler()
-    handler.setLevel(logging.DEBUG)
-    handler.setFormatter(logging.Formatter('%(asctime)s | %(levelname)s | %(msg)s'))
-    logger.addHandler(handler)
-
-    app = web.Application()
-    setup_routes(app)
-    setup_templates(app)
-    app.on_startup.append(start_background_tasks)
-    app.on_cleanup.append(cleanup_background_tasks)
-    web.run_app(app, host='127.0.0.1', port=8080)

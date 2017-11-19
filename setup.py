@@ -21,4 +21,9 @@ setup(
     ],
     # Ensure we include files from the manifest
     include_package_data=True,
+    entry_points={
+        'console_scripts': [
+            'factorio_status_ui = factorio_status_ui.serve:main'
+        ]
+    }
 )

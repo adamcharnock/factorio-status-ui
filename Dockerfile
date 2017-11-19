@@ -8,8 +8,14 @@ RUN npm install .
 
 FROM python:3.6.3-alpine
 
-ADD . /code/
+WORKDIR /code
+
 COPY --from=node_build /code/node_modules /code/node_modules
 
-WORKDIR /code
-RUN python setup.py install
+ADD setup.py VERSION /code/
+RUN python setup.py develop
+
+ADD . /code/
+
+
+ENTRYPOINT 'factorio_status_ui'

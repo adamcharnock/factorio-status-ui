@@ -1,9 +1,13 @@
 import json
 import re
+import tempfile
 from pathlib import Path
 from typing import Tuple, List
 
 import logging
+from zipfile import ZipFile
+
+from datetime import datetime
 
 from factorio_status_ui.state import Player, server, mod_database, Mod, Config
 
@@ -79,6 +83,25 @@ def handle_mods(mods_and_files: Tuple[str, List[Path]]):
     server.mods = tuple(mods)
     logger.info('Mods changed: {}'.format(', '.join(m.name for m in mods if m.enabled)))
     logger.info('Mods changed (disabled): {}'.format(', '.join(m.name for m in mods if not m.enabled)))
+
+    refresh_all_mods_file()
+
+
+def refresh_all_mods_file():
+    # TODO: This is blocking, perhaps put it in a different executor
+    logger.info('Refreshing all mods zip file')
+    all_mods_dir = Path(tempfile.gettempdir()) / 'factorio-status-ui'
+    all_mods_dir.mkdir(exist_ok=True)
+    tmp_zip_path = all_mods_dir / 'tmp.zip'
+    with ZipFile(tmp_zip_path, mode='w') as tmp_zip:
+        for mod in server.mods:
+            if mod.file and mod.enabled:
+                tmp_zip.write(mod.file)
+
+    all_mods_file = all_mods_dir / 'all-mods-{}.zip'.format(datetime.now().strftime('%Y-%m-%d_%H-%m-%S'))
+    tmp_zip_path.rename(all_mods_file)
+    server.all_mods_file = all_mods_file
+    logger.info('Written all mods zip file to {}'.format(all_mods_file))
 
 
 def handle_mod_database(data):

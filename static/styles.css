@@ -11,3 +11,6 @@
 .navbar-brand {
     font-size: 36px;
 }
+.monospace {
+    font-family: Consolas, Lucida Console, monospace;
+}

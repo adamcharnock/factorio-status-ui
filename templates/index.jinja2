@@ -72,7 +72,7 @@
                                     <tbody>
                                     <tr>
                                         <th>Host</th>
-                                        <td>{{ server.ip }}:{{ server.port }}</td>
+                                        <td class="monospace">{{ server.ip }}:{{ server.port }}</td>
                                     </tr>
                                     </tbody>
                                 </table>
@@ -138,7 +138,7 @@
                                     <tbody>
                                     {% for k, v in server.config.as_dict().items() %}
                                         <tr>
-                                            <td>{{ k }}</td>
+                                            <td class="monospace">{{ k }}</td>
                                             <td>
                                                 {% if k == "password" and not config.SHOW_PASSWORD %}
                                                     <em>[hidden]</em>
@@ -163,6 +163,9 @@
                         <div class="box box-warning">
                             <div class="box-header with-border">
                                 <h3 class="box-title">Mods</h3>
+                                <div class="box-tools pull-right">
+                                    <button type="button" class="btn btn-primary btn-social btn-sm"><i class="fa fa-download"></i>Download all mods</button>
+                                </div>
                             </div>
                             <div class="box-body">
 
@@ -194,14 +197,16 @@
                                             {% else %}
                                                 <td>{{ mod.name }}</td>
                                             {% endif %}
-                                            <td>{{ mod.version }}</td>
+                                            <td>{{ mod.version or '-' }}</td>
                                             <td>
                                                 {% if mod_data.downloads_count %}
                                                     {{ "{:,.0f}".format(mod_data.downloads_count) }}
                                                 {% endif %}
-                                                </td>
+                                            </td>
                                             <td>
-                                                <a href="/mods/download/{{ mod.file.name }}" class="btn btn-default btn-xs"><i class="fa fa-download"></i></a>
+                                                {% if mod.file %}
+                                                    <a href="/mods/download/{{ mod.file.name }}" class="btn btn-default btn-xs"><i class="fa fa-download"></i></a>
+                                                {% endif %}
                                             </td>
                                         </tr>
                                     {% endfor %}

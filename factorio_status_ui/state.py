@@ -64,7 +64,8 @@ class Server(State):
     players: Tuple[Player] = tuple()
     admins: Tuple[Player] = tuple()
     mods: Tuple[Mod] = tuple()
-    config: Config
+    all_mods_file: Path
+    config: Config = {}
     ip: factorio_status_ui.config.SERVER_IP = None
     port: factorio_status_ui.config.SERVER_PORT = 34197
 

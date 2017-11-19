@@ -45,10 +45,21 @@ class ModDownloadView(web.View):
         return web.HTTPNotFound()
 
 
+class ModDownloadAllView(web.View):
+    async def get(self):
+        if server.all_mods_file:
+            return web.FileResponse(server.all_mods_file, headers={
+                'Content-Disposition': 'attachment; filename="{}"'.format(server.all_mods_file.name)
+            })
+        else:
+            return web.HTTPServiceUnavailable(reason='File still being generated')
+
+
 def setup_routes(app):
     app.router.add_static('/static', ROOT_DIR / 'static', append_version=True)
     app.router.add_static('/lib', ROOT_DIR / 'node_modules', append_version=True)
     app.router.add_get('/', IndexView)
+    app.router.add_get('/mods/download/all', ModDownloadAllView)
     app.router.add_get('/mods/download/{file_name}', ModDownloadView)
 
 

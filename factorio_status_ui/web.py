@@ -12,6 +12,7 @@ import async_timeout
 from factorio_status_ui import handlers, config
 from factorio_status_ui.rcon import RconConnection
 from factorio_status_ui.state import server, mod_database
+from factorio_status_ui.utils import handle_aio_exceptions
 
 ROOT_DIR = Path(__file__).parent.parent
 
@@ -127,7 +128,6 @@ async def poll_mod_database(handler):
 
 async def determine_ip(handler):
     logger.info('Determining server public IP address')
-
     with async_timeout.timeout(10):
         async with aiohttp.ClientSession() as session:
             async with session.get('https://api.ipify.org?format=json') as response:
@@ -135,28 +135,24 @@ async def determine_ip(handler):
 
 
 async def start_background_tasks(app):
-    app['monitor_players'] = app.loop.create_task(poll_rcon('/players', handlers.handle_players))
-    app['monitor_admins'] = app.loop.create_task(poll_rcon('/admins', handlers.handle_admins))
-    app['monitor_mods'] = app.loop.create_task(poll_local_mods(handlers.handle_mods))
-    app['monitor_config'] = app.loop.create_task(poll_config(handlers.handle_config))
-    app['determine_ip'] = app.loop.create_task(determine_ip(handlers.handle_ip))
-    app['monitor_mod_database'] = app.loop.create_task(poll_mod_database(handlers.handle_mod_database))
+    coroutines = [
+        poll_rcon('/players', handlers.handle_players),
+        poll_rcon('/admins', handlers.handle_admins),
+        poll_local_mods(handlers.handle_mods),
+        poll_config(handlers.handle_config),
+        determine_ip(handlers.handle_ip),
+        poll_mod_database(handlers.handle_mod_database),
+    ]
+
+    app['tasks'] = asyncio.gather(
+        *map(handle_aio_exceptions, coroutines),
+        loop=app.loop
+    )
 
 
 async def cleanup_background_tasks(app):
-    app['monitor_players'].cancel()
-    app['monitor_admins'].cancel()
-    app['monitor_mods'].cancel()
-    app['monitor_config'].cancel()
-    app['determine_ip'].cancel()
-    app['monitor_mod_database'].cancel()
-
-    await app['monitor_players']
-    await app['monitor_admins']
-    # await app['monitor_mods']
-    await app['monitor_config']
-    await app['determine_ip']
-    await app['monitor_mod_database']
+    app['tasks'].cancel()
+    await app['tasks']
 
 
 if __name__ == '__main__':

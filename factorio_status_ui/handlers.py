@@ -3,7 +3,11 @@ import re
 from pathlib import Path
 from typing import Tuple, List
 
+import logging
+
 from factorio_status_ui.state import Player, server, mod_database, Mod, Config
+
+logger = logging.getLogger(__name__)
 
 
 def handle_players(player_data: str):
@@ -18,8 +22,8 @@ def handle_players(player_data: str):
             is_online='(online)' in extra
         ))
 
-    print('Players:', repr(players))
     server.players = tuple(players)
+    logger.info('Players changed: {}'.format(players))
 
 
 def handle_admins(admin_data: str):
@@ -39,8 +43,8 @@ def handle_admins(admin_data: str):
 
         admins.append(admin)
 
-    print('Admins:', repr(admins))
     server.admins = tuple(admins)
+    logger.info('Admins changed: {}'.format(admins))
 
 
 def handle_mods(mods_and_files: Tuple[str, List[Path]]):
@@ -72,8 +76,9 @@ def handle_mods(mods_and_files: Tuple[str, List[Path]]):
             file=file,
         ))
 
-    print('Mods:', repr(mods))
     server.mods = tuple(mods)
+    logger.info('Mods changed: {}'.format(', '.join(m.name for m in mods if m.enabled)))
+    logger.info('Mods changed (disabled): {}'.format(', '.join(m.name for m in mods if not m.enabled)))
 
 
 def handle_mod_database(data):
@@ -83,7 +88,7 @@ def handle_mod_database(data):
             tmp_database[mod['name']] = mod
     if tmp_database:
         mod_database.update(tmp_database)
-    print('Mods loaded:', len(mod_database))
+    logger.info('Mod database changed. {} mods found.'.format(len(mod_database)))
 
 
 def handle_config(config: dict):
@@ -108,10 +113,10 @@ def handle_config(config: dict):
 
     kwargs = {k.replace('-', '_'): munge_value(v.decode('utf8')) for k, v in config.items()}
     server.config = Config(**kwargs)
-    print(server.config)
+    logger.info('Server config changed: {}'.format(server.config))
 
 
 def handle_ip(ip):
     if not server.ip:
         server.ip = ip
-        print(server.ip)
+        logger.info('Server IP set: {}'.format(server.ip))

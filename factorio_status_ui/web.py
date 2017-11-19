@@ -4,6 +4,7 @@ import os
 import aiohttp_jinja2
 import jinja2
 import aiohttp
+import logging
 from aiohttp import web
 from pathlib import Path
 import async_timeout
@@ -13,6 +14,8 @@ from factorio_status_ui.rcon import RconConnection
 from factorio_status_ui.state import server, mod_database
 
 ROOT_DIR = Path(__file__).parent.parent
+
+logger = logging.getLogger(__name__)
 
 
 class IndexView(web.View):
@@ -52,11 +55,13 @@ def setup_templates(app):
     aiohttp_jinja2.setup(app, loader=jinja2.FileSystemLoader(str(ROOT_DIR / 'templates')), autoescape=True)
 
 
-async def poll_coroutine(coroutine, handler, interval=1):
+async def poll_local_mods(handler, interval=1):
+    logger.info('Setting up monitor: Local mods (via filesystem)')
     previous_value = None
     while True:
         try:
-            value = await coroutine()
+            with open(config.MODS_DIR / 'mod-list.json') as f:
+                value = f.read(), list(config.MODS_DIR.glob('*.zip'))
             if value != previous_value:
                 handler(value)
             previous_value = value
@@ -82,6 +87,7 @@ async def poll_rcon(command, handler, interval=1):
 
 async def poll_config(handler, interval=10):
     """Execute the config command multiple times in order to get all config options"""
+    logger.info('Setting up monitor: Server config polling (via RCON)')
     options = ['afk-auto-kick', 'allow-commands', 'autosave-interval', 'autosave-only-on-server',
                'ignore-player-limit-for-returning-players', 'max-players', 'max-upload-speed', 'only-admins-can-pause',
                'password', 'require-user-verification', 'visibility-lan', 'visibility-public']
@@ -101,19 +107,27 @@ async def poll_config(handler, interval=10):
                 return
 
 
-async def get_local_mods():
-    with open(config.MODS_DIR / 'mod-list.json') as f:
-        return f.read(), list(config.MODS_DIR.glob('*.zip'))
+async def poll_mod_database(handler):
+    logger.info('Setting up monitor: Mod database polling')
+    previous_value = None
 
+    async with aiohttp.ClientSession() as session, async_timeout.timeout(60):
+        while True:
+            try:
+                async with session.get('https://mods.factorio.com/api/mods?page_size=100000') as response:
+                    value = await response.json()
 
-async def get_mod_database():
-    with async_timeout.timeout(60):
-        async with aiohttp.ClientSession() as session:
-            async with session.get('https://mods.factorio.com/api/mods?page_size=100000') as response:
-                return await response.json()
+                if value != previous_value:
+                    handler(value)
+                previous_value = value
+                await asyncio.sleep(60*60*24)
+            except asyncio.CancelledError:
+                return
 
 
 async def determine_ip(handler):
+    logger.info('Determining server public IP address')
+
     with async_timeout.timeout(10):
         async with aiohttp.ClientSession() as session:
             async with session.get('https://api.ipify.org?format=json') as response:
@@ -123,10 +137,10 @@ async def determine_ip(handler):
 async def start_background_tasks(app):
     app['monitor_players'] = app.loop.create_task(poll_rcon('/players', handlers.handle_players))
     app['monitor_admins'] = app.loop.create_task(poll_rcon('/admins', handlers.handle_admins))
-    app['monitor_mods'] = app.loop.create_task(poll_coroutine(get_local_mods, handlers.handle_mods))
+    app['monitor_mods'] = app.loop.create_task(poll_local_mods(handlers.handle_mods))
     app['monitor_config'] = app.loop.create_task(poll_config(handlers.handle_config))
     app['determine_ip'] = app.loop.create_task(determine_ip(handlers.handle_ip))
-    app['monitor_mod_database'] = app.loop.create_task(poll_coroutine(get_mod_database, handlers.handle_mod_database, interval=3600 * 24))
+    app['monitor_mod_database'] = app.loop.create_task(poll_mod_database(handlers.handle_mod_database))
 
 
 async def cleanup_background_tasks(app):
@@ -146,6 +160,14 @@ async def cleanup_background_tasks(app):
 
 
 if __name__ == '__main__':
+    logger = logging.getLogger('factorio_status_ui')
+    logger.setLevel(logging.DEBUG)
+
+    handler = logging.StreamHandler()
+    handler.setLevel(logging.DEBUG)
+    handler.setFormatter(logging.Formatter('%(asctime)s | %(levelname)s | %(msg)s'))
+    logger.addHandler(handler)
+
     app = web.Application()
     setup_routes(app)
     setup_templates(app)

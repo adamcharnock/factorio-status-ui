@@ -5,9 +5,7 @@ import socket
 import struct
 import sys
 
-from factorio_status_ui.config import RCON_SERVER_HOSTNAME, RCON_SERVER_PORT, RCON_PASSWORD
-
-
+from factorio_status_ui.state import application_config
 
 MESSAGE_TYPE_AUTH = 3
 MESSAGE_TYPE_AUTH_RESP = 2
@@ -55,8 +53,8 @@ async def get_response(reader):
 class RconConnection():
 
     async def __aenter__(self):
-        self.reader, self.writer = await asyncio.open_connection(RCON_SERVER_HOSTNAME, RCON_SERVER_PORT)
-        await send_message(self.writer, RCON_PASSWORD, MESSAGE_TYPE_AUTH)
+        self.reader, self.writer = await asyncio.open_connection(application_config.rcon_host, application_config.rcon_port)
+        await send_message(self.writer, application_config.rcon_password, MESSAGE_TYPE_AUTH)
         response_string, response_id, response_type = await get_response(self.reader)
 
         return self
@@ -71,45 +69,9 @@ class RconConnection():
         # See: https://developer.valvesoftware.com/wiki/Source_RCON_Protocol#Multiple-packet_Responses
         # Basically we get an empty packet after each response
         if command.startswith('/config'):
-            # Config commands seem to be multi-packet responses
+            # ServerConfig commands seem to be multi-packet responses
             await get_response(self.reader)
 
         return response_string
-
-
-async def main():
-    if len(sys.argv) > 1:
-        command_string = " ".join(sys.argv[1:])
-    else:
-        command_string = input("Command: ")
-
-    reader, writer = await asyncio.open_connection(RCON_SERVER_HOSTNAME, RCON_SERVER_PORT)
-
-    # TODO: Come back to timeouts
-    #sock.settimeout(RCON_SERVER_TIMEOUT)
-
-    # send SERVERDATA_AUTH
-    print("Authenticating")
-    await send_message(writer, RCON_PASSWORD, MESSAGE_TYPE_AUTH)
-
-    # get SERVERDATA_AUTH_RESPONSE (auth response 2 of 2)
-    response_string, response_id, response_type = await get_response(reader)
-    print("Auth response: {}".format(response_string, response_id, response_type))
-
-    print("Running command...")
-
-    # send SERVERDATA_EXECCOMMAND
-    await send_message(writer, command_string, MESSAGE_TYPE_COMMAND)
-
-    # get SERVERDATA_RESPONSE_VALUE (command response)
-    response_string, response_id, response_type = await get_response(reader)
-
-    print(response_string, response_id, response_type)
-    writer.close()
-
-
-if __name__ == '__main__':
-    loop = asyncio.get_event_loop()
-    server = loop.run_until_complete(main())
 
 

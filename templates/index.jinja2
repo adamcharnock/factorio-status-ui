@@ -37,7 +37,7 @@
         <nav class="navbar navbar-static-top">
             <div class="container">
                 <div class="navbar-header">
-                    <a href="/" class="navbar-brand">{{ server.name }}</a>
+                    <a href="/" class="navbar-brand">{{ application_config.server_name }}</a>
                     <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse">
                         <i class="fa fa-bars"></i>
                     </button>
@@ -72,7 +72,7 @@
                                     <tbody>
                                     <tr>
                                         <th>Host</th>
-                                        <td class="monospace">{{ server.ip }}:{{ server.port }}</td>
+                                        <td class="monospace">{{ application_config.server_host }}:{{ application_config.server_port }}</td>
                                     </tr>
                                     </tbody>
                                 </table>
@@ -140,7 +140,7 @@
                                         <tr>
                                             <td class="monospace">{{ k }}</td>
                                             <td>
-                                                {% if k == "password" and not config.SHOW_PASSWORD %}
+                                                {% if k == "password" and not application_config.show_password %}
                                                     <em>[hidden]</em>
                                                 {% elif v == true %}
                                                     <i class="fa fa-check" aria-hidden="true"></i>

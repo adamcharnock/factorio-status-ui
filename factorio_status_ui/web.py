@@ -8,9 +8,9 @@ import async_timeout
 import jinja2
 from aiohttp import web
 
-from factorio_status_ui import handlers, config
+from factorio_status_ui import handlers
 from factorio_status_ui.rcon import RconConnection
-from factorio_status_ui.state import server, mod_database
+from factorio_status_ui.state import server, mod_database, application_config
 from factorio_status_ui.utils import handle_aio_exceptions
 
 ROOT_DIR = Path(__file__).parent.parent
@@ -25,7 +25,7 @@ class IndexView(web.View):
             self.request,
             {
                 'server': server,
-                'config': config,
+                'application_config': application_config,
                 'get_mod_data': lambda name: (
                     mod_database.get(name, None) or
                     mod_database.get(name.replace(' ', '_'), None) or
@@ -71,8 +71,8 @@ async def poll_local_mods(handler, interval=1):
     previous_value = None
     while True:
         try:
-            with open(config.MODS_DIR / 'mod-list.json') as f:
-                value = f.read(), list(config.MODS_DIR.glob('*.zip'))
+            with open(application_config.mods_directory / 'mod-list.json') as f:
+                value = f.read(), list(application_config.mods_directory.glob('*.zip'))
             if value != previous_value:
                 handler(value)
             previous_value = value

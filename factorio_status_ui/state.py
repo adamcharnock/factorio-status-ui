@@ -1,8 +1,6 @@
 from pathlib import Path
 from typing import Tuple, Any
 
-import factorio_status_ui.config
-
 
 class State(object):
 
@@ -37,7 +35,7 @@ class Mod(State):
         )
 
 
-class Config(State):
+class ServerConfig(State):
     afk_auto_kick: bool
     allow_commands: str
     autosave_interval: str
@@ -52,23 +50,37 @@ class Config(State):
     visibility_public: Any
 
     def __repr__(self):
-        return '<Config: {}>'.format(self.__dict__)
+        return '<ServerConfig: {}>'.format(self.__dict__)
 
     def as_dict(self):
         return self.__dict__
 
 
 class Server(State):
-    name: str = factorio_status_ui.config.SERVER_NAME
     description: str
     players: Tuple[Player] = tuple()
     admins: Tuple[Player] = tuple()
     mods: Tuple[Mod] = tuple()
     all_mods_file: Path
-    config: Config = {}
-    ip: factorio_status_ui.config.SERVER_IP = None
-    port: factorio_status_ui.config.SERVER_PORT = 34197
+    config: ServerConfig = {}
+
+
+class ApplicationConfig(State):
+    rcon_host: str = None
+    rcon_port: int = None
+    rcon_password: str = None
+    rcon_timeout: int = None
+
+    mods_directory: Path = None
+    saves_directory: Path = None
+
+    server_name: str = None
+    server_host: str = None
+    server_port: int = None
+
+    show_password: bool = None
 
 
 server = Server()
 mod_database = {}
+application_config = ApplicationConfig()

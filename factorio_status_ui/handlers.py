@@ -9,7 +9,7 @@ from zipfile import ZipFile
 
 from datetime import datetime
 
-from factorio_status_ui.state import Player, server, mod_database, Mod, Config
+from factorio_status_ui.state import Player, server, mod_database, Mod, ServerConfig, application_config
 
 logger = logging.getLogger(__name__)
 
@@ -135,11 +135,11 @@ def handle_config(config: dict):
         return v
 
     kwargs = {k.replace('-', '_'): munge_value(v.decode('utf8')) for k, v in config.items()}
-    server.config = Config(**kwargs)
+    server.config = ServerConfig(**kwargs)
     logger.info('Server config changed: {}'.format(server.config))
 
 
 def handle_ip(ip):
-    if not server.ip:
-        server.ip = ip
-        logger.info('Server IP set: {}'.format(server.ip))
+    if not application_config.server_host:
+        application_config.server_host = ip
+        logger.info('Server IP set: {}'.format(application_config.server_host))

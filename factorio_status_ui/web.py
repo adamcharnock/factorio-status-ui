@@ -30,7 +30,8 @@ class IndexView(web.View):
                     mod_database.get(name, None) or
                     mod_database.get(name.replace(' ', '_'), None) or
                     mod_database.get(name.replace('_', ' '), None) or
-                    {})
+                    {}),
+                'version': self.request.app['version'],
             }
         )
 
@@ -170,6 +171,11 @@ async def start_background_tasks(app):
         *map(handle_aio_exceptions, coroutines),
         loop=app.loop
     )
+
+
+async def get_version(app):
+    with open(ROOT_DIR / 'VERSION') as f:
+        app['version'] = f.read().strip()
 
 
 async def cleanup_background_tasks(app):

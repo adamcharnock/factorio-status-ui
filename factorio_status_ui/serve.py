@@ -7,7 +7,8 @@ from pathlib import Path
 from aiohttp import web
 
 from factorio_status_ui.state import application_config
-from factorio_status_ui.web import setup_routes, setup_templates, start_background_tasks, cleanup_background_tasks
+from factorio_status_ui.web import setup_routes, setup_templates, start_background_tasks, cleanup_background_tasks, \
+    get_version
 
 
 def main():
@@ -59,6 +60,7 @@ def main():
     setup_routes(app)
     setup_templates(app)
     app.on_startup.append(start_background_tasks)
+    app.on_startup.append(get_version)
     app.on_cleanup.append(cleanup_background_tasks)
     web.run_app(app, host=application_config.host, port=application_config.port)
 

@@ -79,7 +79,7 @@ This will provide a simpler deployment option.
 Credits
 -------
 
-*Any credits here*
+Developed by Adam Charnock. I'm available for freelance work.
 
 factorio-status-ui is packaged using seed_.
 

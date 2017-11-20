@@ -19,7 +19,7 @@ Factorio Status UI can be run in several ways, so choose the way which best suit
 Python package
 ~~~~~~~~~~~~~~
 
-If you have Python 3.6 available to you can use::
+If you have Python 3.6 available you can use::
 
     pip install factorio-status-ui
     factorio_status_ui \
@@ -32,7 +32,7 @@ If you have Python 3.6 available to you can use::
 Docker image
 ~~~~~~~~~~~~
 
-Factorio Status UI is available as a docker image::
+Factorio Status UI is also available as a `docker image`_::
 
     docker run \
         -v /path/to/factorio/mods:/mods \
@@ -85,3 +85,4 @@ factorio-status-ui is packaged using seed_.
 
 .. _seed: https://github.com/adamcharnock/seed/
 .. _kube-lego: https://github.com/jetstack/kube-lego
+.. _docker image: https://hub.docker.com/r/adamcharnock/factorio-status-ui/

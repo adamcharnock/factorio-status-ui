@@ -61,6 +61,7 @@ class Server(State):
     players: Tuple[Player] = tuple()
     admins: Tuple[Player] = tuple()
     mods: Tuple[Mod] = tuple()
+    mod_settings: dict = {}
     all_mods_file: Path
     config: ServerConfig = ServerConfig()
 

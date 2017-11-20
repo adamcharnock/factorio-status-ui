@@ -53,6 +53,7 @@ def handle_admins(admin_data: str):
 
 def handle_mods(mods_json, mod_settings_json, files):
     mod_data = json.loads(mods_json)['mods']
+    mod_settings = json.loads(mod_settings_json)
 
     parsed_files = []
     files_by_name = {}
@@ -80,6 +81,7 @@ def handle_mods(mods_json, mod_settings_json, files):
         ))
 
     server.mods = tuple(mods)
+    server.mod_settings = mod_settings
     logger.info('Mods changed: {}'.format(', '.join(m.name for m in mods if m.enabled)))
     logger.info('Mods changed (disabled): {}'.format(', '.join(m.name for m in mods if not m.enabled)))
 

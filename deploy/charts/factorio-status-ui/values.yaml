@@ -1,5 +1,5 @@
 image:
-  repository: 10.105.221.46:4000/factorio-status-ui
+  repository: adamcharnock/factorio-status-ui
   tag: latest
   pullPolicy: Always
 

@@ -84,6 +84,9 @@ class ApplicationConfig(State):
 
     show_password: bool = None
 
+    def __repr__(self):
+        return '<ApplicationConfig: {}>'.format(self.__dict__)
+
 
 server = Server()
 mod_database = {}

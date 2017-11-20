@@ -55,6 +55,9 @@ def main():
             continue
         setattr(application_config, option, getattr(args, option))
 
+    logger.info('Starting up')
+    logger.info('Arguments: {}'.format(args.__dict__))
+
     # App
     app = web.Application()
     setup_routes(app)

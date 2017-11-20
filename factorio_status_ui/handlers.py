@@ -51,8 +51,7 @@ def handle_admins(admin_data: str):
     logger.info('Admins changed: {}'.format(admins))
 
 
-def handle_mods(mods_and_files: Tuple[str, List[Path]]):
-    mods_json, files = mods_and_files
+def handle_mods(mods_json, mod_settings_json, files):
     mod_data = json.loads(mods_json)['mods']
 
     parsed_files = []
@@ -96,7 +95,15 @@ def refresh_all_mods_file():
     with ZipFile(tmp_zip_path, mode='w') as tmp_zip:
         for mod in server.mods:
             if mod.file and mod.enabled:
-                tmp_zip.write(mod.file)
+                tmp_zip.write(mod.file, arcname=Path('mods') / mod.file.name)
+
+        extras = [
+            application_config.mods_directory / 'mod-list.json',
+            application_config.mods_directory / 'mod-settings.json',
+        ]
+        for extra in extras:
+            if extra.exists():
+                tmp_zip.write(extra, arcname=Path('mods') / extra.name)
 
     all_mods_file = all_mods_dir / 'all-mods-{}.zip'.format(datetime.now().strftime('%Y-%m-%d_%H-%m-%S'))
     tmp_zip_path.rename(all_mods_file)

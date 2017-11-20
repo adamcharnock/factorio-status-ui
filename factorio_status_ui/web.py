@@ -71,10 +71,22 @@ async def poll_local_mods(handler, interval=1):
     previous_value = None
     while True:
         try:
-            with open(application_config.mods_directory / 'mod-list.json') as f:
-                value = f.read(), list(application_config.mods_directory.glob('*.zip'))
+            try:
+                with open(application_config.mods_directory / 'mod-list.json') as f:
+                    mod_list = f.read()
+            except OSError:
+                mod_list = '{}'
+
+            try:
+                with open(application_config.mods_directory / 'mod-settings.json') as f:
+                    mod_settings = f.read()
+            except OSError:
+                mod_settings = '{}'
+
+            value = mod_list, mod_settings, list(application_config.mods_directory.glob('*.zip'))
+
             if value != previous_value:
-                handler(value)
+                handler(*value)
             previous_value = value
             await asyncio.sleep(interval)
         except asyncio.CancelledError:

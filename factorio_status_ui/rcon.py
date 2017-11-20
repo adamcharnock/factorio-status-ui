@@ -14,6 +14,9 @@ MESSAGE_TYPE_RESP = 0
 MESSAGE_ID = 0
 
 
+class RconAuthenticatedFailed(Exception): pass
+
+
 async def send_message(writer, command_string, message_type):
     """Packages up a command string into a message and sends it"""
     try:
@@ -56,6 +59,13 @@ class RconConnection():
         self.reader, self.writer = await asyncio.open_connection(application_config.rcon_host, application_config.rcon_port)
         await send_message(self.writer, application_config.rcon_password, MESSAGE_TYPE_AUTH)
         response_string, response_id, response_type = await get_response(self.reader)
+
+        if response_id == -1:
+            raise RconAuthenticatedFailed('Failed to authenticate with RCON server {}:{} using password "{}"'.format(
+                application_config.rcon_host,
+                application_config.rcon_port,
+                application_config.rcon_password,
+            ))
 
         return self
 

@@ -1,5 +1,5 @@
-Factorio Status UI
-==================
+Factorio Status Interface
+=========================
 
 Provides a public-facing interface for your factorio server. Information displayed:
 

@@ -38,7 +38,7 @@ Factorio Status UI is available as a docker image::
         -v /path/to/factorio/mods:/mods \
         -v /path/to/factorio/saves:/saves \
         -p 8080:8080 \
-        10.105.221.46:4000/factorio-status-ui \
+        adamcharnock/factorio-status-ui \
         --rcon-host=FACTORIO_SERVER_IP \
         --rcon-port=27015 \
         --mods-directory=/mods \

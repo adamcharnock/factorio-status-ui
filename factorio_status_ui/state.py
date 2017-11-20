@@ -82,8 +82,6 @@ class ApplicationConfig(State):
     server_host: str = None
     server_port: int = None
 
-    show_password: bool = None
-
     def __repr__(self):
         return '<ApplicationConfig: {}>'.format(self.__dict__)
 

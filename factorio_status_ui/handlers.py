@@ -140,7 +140,9 @@ def handle_config(config: dict):
         if 'every' in v:  # Autosave every 10 minutes
             return v.split('every', 1)[-1].strip()
         if v.strip() == "The server currently doesn't have a password":
-            return None
+            return False
+        if v.strip() == "The server currently has a password":
+            return True
         return v
 
     kwargs = {k.replace('-', '_'): munge_value(v.decode('utf8')) for k, v in config.items()}

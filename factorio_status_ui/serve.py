@@ -47,8 +47,6 @@ def main():
     required.add_argument('--mods-directory', help='Path to factorio mods directory.', type=Path, required=True)
     required.add_argument('--saves-directory', help='Path to factorio saves directory.', type=Path, required=True)
 
-    parser.add_argument('--show-password', help='Show the server password', action='store_true')
-
     args = parser.parse_args()
     for option in dir(application_config):
         if option.startswith('_'):

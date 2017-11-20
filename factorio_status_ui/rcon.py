@@ -5,6 +5,8 @@ import socket
 import struct
 import sys
 
+import logging
+
 from factorio_status_ui.state import application_config
 
 MESSAGE_TYPE_AUTH = 3
@@ -13,12 +15,18 @@ MESSAGE_TYPE_COMMAND = 2
 MESSAGE_TYPE_RESP = 0
 MESSAGE_ID = 0
 
+logger = logging.getLogger(__name__)
 
+
+class RconConnectionError(Exception): pass
+class RconTimeoutError(Exception): pass
 class RconAuthenticatedFailed(Exception): pass
 
 
 async def send_message(writer, command_string, message_type):
     """Packages up a command string into a message and sends it"""
+    logger.debug('Send message to RCON server: {}'.format(command_string))
+
     try:
         # size of message in bytes:
         # id=4 + type=4 + body=variable + null terminator=2 (1 for python string and 1 for message terminator)
@@ -28,10 +36,13 @@ async def send_message(writer, command_string, message_type):
             message_format, message_size, MESSAGE_ID, message_type, command_string.encode('utf8'), b'\x00\x00'
         )
         writer.write(packed_message)
-        await writer.drain()
-    except socket.timeout:
-        writer.shutdown(socket.SHUT_RDWR)
-        writer.close()
+        response_data = await asyncio.wait_for(
+            writer.drain(),
+            timeout=application_config.rcon_timeout
+        )
+
+    except asyncio.TimeoutError:
+        raise RconTimeoutError('Timeout sending RCON message. type={}, command={}'.format(message_type, command_string))
 
 
 async def get_response(reader):
@@ -42,21 +53,44 @@ async def get_response(reader):
         response_size, = struct.unpack('=l', await reader.read(4))
         message_format = ''.join(['=ll', str(response_size - 9), 's1s'])
 
-        response_data = await reader.read(response_size)
+        response_data = await asyncio.wait_for(
+            reader.read(response_size),
+            timeout=application_config.rcon_timeout
+        )
         response_id, response_type, response_string, response_dummy \
             = struct.unpack(message_format, response_data)
         response_string = response_string.rstrip(b'\x00\n')
         return response_string, response_id, response_type
 
-    except socket.timeout:
-        response_string = "(Connection Timeout)"
-        return response_string, response_id, response_type
+    except asyncio.TimeoutError:
+        raise RconTimeoutError('Timeout receiving RCON response')
 
 
 class RconConnection():
 
     async def __aenter__(self):
-        self.reader, self.writer = await asyncio.open_connection(application_config.rcon_host, application_config.rcon_port)
+        logger.debug('Authenticating with RCON server {}:{} using password "{}"'.format(
+            application_config.rcon_host,
+            application_config.rcon_port,
+            application_config.rcon_password,
+        ))
+
+        try:
+            self.reader, self.writer = await asyncio.wait_for(
+                asyncio.open_connection(application_config.rcon_host, application_config.rcon_port),
+                timeout=application_config.rcon_timeout
+            )
+        except asyncio.TimeoutError:
+            raise RconTimeoutError('Timeout connecting to RCON server {}:{}'.format(
+                application_config.rcon_host,
+                application_config.rcon_port
+            ))
+        except ConnectionRefusedError:
+            raise RconConnectionError('Server {} refused attempted RCON connection on port {}'.format(
+                application_config.rcon_host,
+                application_config.rcon_port
+            ))
+
         await send_message(self.writer, application_config.rcon_password, MESSAGE_TYPE_AUTH)
         response_string, response_id, response_type = await get_response(self.reader)
 
@@ -66,6 +100,8 @@ class RconConnection():
                 application_config.rcon_port,
                 application_config.rcon_password,
             ))
+        else:
+            logger.debug('Successfully authenticated with RCON server')
 
         return self
 
@@ -73,6 +109,8 @@ class RconConnection():
         self.writer.close()
 
     async def run_command(self, command: str):
+        logger.debug('Running RCON command: {}'.format(command))
+
         await send_message(self.writer, command, MESSAGE_TYPE_COMMAND)
         response_string, response_id, response_type = await get_response(self.reader)
 

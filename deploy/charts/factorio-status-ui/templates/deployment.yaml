@@ -33,7 +33,7 @@ spec:
             - --mods-directory=/mods
             - --saves-directory=/saves
             {{- if .Values.factorio.host }}
-            - --server-host={{ required .Values.factorio.host }}
+            - --server-host={{ required "Valid value for factorio.host required" .Values.factorio.host }}
             {{- end }}
             - --server-port={{ required "Valid value for factorio.port required" .Values.factorio.port }}
             - --server-name={{ required "Valid value for factorio.serverName required" .Values.factorio.serverName }}

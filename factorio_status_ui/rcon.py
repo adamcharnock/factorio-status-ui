@@ -109,8 +109,6 @@ class RconConnection():
         self.writer.close()
 
     async def run_command(self, command: str):
-        logger.debug('Running RCON command: {}'.format(command))
-
         await send_message(self.writer, command, MESSAGE_TYPE_COMMAND)
         response_string, response_id, response_type = await get_response(self.reader)
 
@@ -120,6 +118,7 @@ class RconConnection():
             # ServerConfig commands seem to be multi-packet responses
             await get_response(self.reader)
 
+        logger.debug('RCON command "{}" executed, answer : {}'.format(command, response_string))
         return response_string
 
 

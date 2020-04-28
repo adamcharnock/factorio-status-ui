@@ -86,9 +86,9 @@
                                                 -
                                             {% else %}
                                                 {% if server.config.password %}
-                                                    <i class="fa fa-unlock"></i> No password
-                                                {% else %}
                                                     <i class="fa fa-lock"></i> Password protected
+                                                {% else %}
+                                                    <i class="fa fa-unlock"></i> No password
                                                 {% endif %}
                                             {% endif %}
                                         </td>
@@ -124,7 +124,13 @@
                                                     <i class="fa fa-times" aria-hidden="true"></i>
                                                 {% endif %}
                                             </td>
-                                            <td>{{ player.is_admin }}TBA</td>
+                                            <td>
+                                                {% if player.is_admin %}
+                                                    <i class="fa fa-check" aria-hidden="true"></i>
+                                                {% else %}
+                                                    <i class="fa fa-times" aria-hidden="true"></i>
+                                                {% endif %}
+                                            </td>
                                         </tr>
                                     {% else %}
                                         <tr>
@@ -141,7 +147,7 @@
                             <div class="box-header with-border">
                                 <h3 class="box-title">Configuration</h3>
                                 <div class="box-tools pull-right">
-                                    <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i>
+                                    <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i>
                                     </button>
                                 </div>
                             </div>
@@ -179,7 +185,7 @@
                             <div class="box-header with-border">
                                 <h3 class="box-title">Mod Settings</h3>
                                 <div class="box-tools pull-right">
-                                    <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i>
+                                    <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i>
                                     </button>
                                 </div>
                             </div>

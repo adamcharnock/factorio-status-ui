@@ -6,7 +6,9 @@ ADD package.json /code/
 RUN npm install .
 
 
-FROM python:3.6.3-alpine
+FROM python:3.7-alpine
+
+RUN apk update && apk upgrade && apk add build-base
 
 WORKDIR /code
 

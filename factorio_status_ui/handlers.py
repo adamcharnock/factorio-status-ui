@@ -17,38 +17,43 @@ logger = logging.getLogger(__name__)
 def handle_players(player_data: str):
     player_data = player_data.decode('utf8')
 
-    players = []
     for player_line in player_data.split('\n')[1:]:
         username, *extra = player_line.strip().split(' ', 1)
 
-        players.append(Player(
-            username=username,
-            is_online='(online)' in extra
-        ))
+        player_found = False
+        for player in server.players:
+            if player.username == username:
+                player.is_online = '(online)' in extra
+                player_found = True
 
-    server.players = tuple(players)
-    logger.info('Players changed: {}'.format(players))
+        if not player_found:
+            server.players.append(Player(
+                username=username,
+                is_online='(online)' in extra
+            ))
+
+    logger.info('Players states changed: {}'.format(server.players))
 
 
 def handle_admins(admin_data: str):
     admin_data = admin_data.decode('utf8')
 
-    admins = []
     for admin_line in admin_data.split('\n'):
         username, *extra = admin_line.strip().split(' ', 1)
 
-        admin = None
+        player_found = False
         for player in server.players:
             if player.username == username:
-                admin = player
+                player.is_admin = True
+                player_found = True
 
-        if not admin:
-            admin = Player(username=username)
+        if not player_found:
+            server.players.append(Player(
+                username=username,
+                is_admin = True
+            ))
 
-        admins.append(admin)
-
-    server.admins = tuple(admins)
-    logger.info('Admins changed: {}'.format(admins))
+    logger.info('Players admin changed: {}'.format(server.players))
 
 
 def handle_mods(mods_json, mod_settings_json, files):

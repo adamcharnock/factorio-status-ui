@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Tuple, Any
+from typing import List, Any
 
 
 class State(object):
@@ -12,11 +12,13 @@ class State(object):
 class Player(State):
     username: str
     is_online: bool = False
+    is_admin: bool = False
 
     def __repr__(self):
-        return '<Player: {}, is_online={}>'.format(
+        return '<Player: {}, is_online={}, is_admin={}>'.format(
             self.username,
             self.is_online,
+            self.is_admin,
         )
 
 
@@ -58,9 +60,8 @@ class ServerConfig(State):
 
 class Server(State):
     description: str
-    players: Tuple[Player] = tuple()
-    admins: Tuple[Player] = tuple()
-    mods: Tuple[Mod] = tuple()
+    players: List[Player] = []
+    mods: List[Mod] = []
     mod_settings: dict = {}
     all_mods_file: Path
     config: ServerConfig = ServerConfig()

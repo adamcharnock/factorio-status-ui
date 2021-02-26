@@ -16,7 +16,7 @@ setup(
     long_description=open('README.rst').read() if exists("README.rst") else "",
     install_requires=[
         'python-valve==0.2.1',
-        'aiohttp==3.6.2',
+        'aiohttp==3.7.4',
         'aiohttp_jinja2==1.2.0',
     ],
     # Ensure we include files from the manifest
